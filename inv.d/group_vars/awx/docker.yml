@@ -1,0 +1,39 @@
+---
+
+docker_user: docker
+
+group_data:
+  - name: "{{ docker_user }}"
+    gid: 10100
+
+user_data:
+  - name: "{{ docker_user }}"
+    group: "{{ docker_user }}"
+    comment: Docker service user
+    expires: -1
+    home: "/home/{{ docker_user }}"
+    shell: /bin/false
+    uid: 10100
+
+sudo_groups:
+  - "{{ docker_user }}"
+
+vg_data:
+  - name: datavg
+    disks:
+      - /dev/sdb
+    lvs:
+      - name: docker
+        size: "{{ vagrant_disk | default(5120) | int - 512 }}"
+        mount: /docker
+        type: xfs
+
+data_structure:
+  - name: /docker
+    owner: "{{ docker_user }}"
+    group: "{{ docker_user }}"
+    mode: "0755"
+
+docker_daemon_props:
+  insecure-registries: "{{ docker_insecure_regs | default([]) | to_nice_json(indent=2) | indent(width=2) }}"
+  data-root: /docker

@@ -1,0 +1,83 @@
+---
+
+- name: Install AWX components
+  hosts: awx
+  gather_facts: no
+  tags:
+    - awx_install
+    - awx
+
+  tasks:
+
+    - name: Enable EPEL repo
+      dnf:
+        name: epel-release
+        state: present
+        update_cache: yes
+      become: yes
+
+    - name: Install AWX dependencies
+      dnf:
+        name: "{{ awx_deps }}"
+        state: present
+        update_cache: yes
+      become: yes
+
+    - name: Add user to docker group
+      user:
+        name: "{{ ansible_user }}"
+        groups: "{{ docker_user }}"
+        append: yes
+      become: yes
+
+    - name: Git checkout
+      git:
+        repo: "{{ awx_git_repo }}"
+        dest: "{{ awx_git_dest }}"
+        version: "{{ awx_git_version }}"
+        force: yes
+
+    - name: Configure inventory
+      lineinfile:
+        path: "{{ awx_git_dest }}/tools/docker-compose/inventory"
+        line: "{{ item['key'] }}=\"{{ item['value'] }}\""
+      loop: "{{ awx_inventory_data | dict2items }}"
+
+    - name: Build docker-compose
+      tags: build
+      make:
+        chdir: "{{ awx_git_dest }}"
+        target: docker-compose-build
+
+    - name: Start AWX
+      tags: start
+      # environment:
+      #   CONTROL_PLANE_NODE_COUNT: 3
+      make:
+        chdir: "{{ awx_git_dest }}"
+        target: docker-compose
+        params:
+          COMPOSE_UP_OPTS: -d
+
+    - name: Wait for AWX services to start
+      vars:
+        pattern: 'INFO success: awx-rsyslogd entered RUNNING state'
+      command:
+        cmd: docker logs tools_awx_1
+      changed_when: no
+      register: start_awx_logs
+      retries: 20
+      delay: 30
+      until: start_awx_logs['stdout'] is regex(pattern)
+
+    - name: Create AWX UI
+      community.docker.docker_container_exec:
+        container: tools_awx_1
+        command: make clean-ui ui-devel
+
+    - name: Create AWX admin user
+      tags: admin
+      debug:
+        msg:
+          Now manually create an AWX admin account by running
+          'docker exec -ti tools_awx_1 awx-manage createsuperuser'

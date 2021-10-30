@@ -1,0 +1,8 @@
+---
+
+- name: Manage Ansible deployment
+  hosts: localhost
+  connection: local
+  gather_facts: no
+
+- import_playbook: ansible_install.yml

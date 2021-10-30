@@ -1,0 +1,8 @@
+---
+
+- name: Manage AWX deployment
+  hosts: localhost
+  connection: local
+  gather_facts: no
+
+- import_playbook: awx_install.yml

@@ -1,0 +1,37 @@
+---
+
+docker_edition: ce
+docker_version: ""
+
+docker_pip_packages:
+  # Needed for Ansible docker_swarm module
+  # https://docs.ansible.com/ansible/latest/collections/community/general/docker_swarm_module.html#requirements
+  # TODO: docker 5+ needs re-testing now...
+  # docker 5.0.0 broke docker modules
+  - docker<5
+  - docker-compose
+
+docker_repo_data:
+  url: https://download.docker.com/linux/centos/docker-{{ docker_edition }}.repo
+  gpg_key: https://download.docker.com/linux/centos/gpg
+
+old_docker_packages:
+  - docker
+  - docker-client
+  - docker-client-latest
+  - docker-common
+  - docker-latest
+  - docker-latest-logrotate
+  - docker-logrotate
+  - docker-engine
+
+docker_packages:
+  - "docker-{{ docker_edition }}{{
+      ((docker_version is defined) and (docker_version | length > 0)) |
+      ternary('-' + docker_version | default(''), '') }}"
+  - "docker-{{ docker_edition }}-cli{{
+      ((docker_version is defined) and (docker_version | length > 0)) |
+      ternary('-' + docker_version | default(''), '') }}"
+  - containerd.io
+
+docker_insecure_regs: []

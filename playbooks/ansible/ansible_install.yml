@@ -1,0 +1,23 @@
+---
+
+- name: Install Ansible components
+  hosts: awx
+  gather_facts: no
+  become: yes
+  tags:
+    - ansible_install
+    - ansible
+
+  tasks:
+
+    - name: Enable EPEL repo
+      dnf:
+        name: epel-release
+        state: present
+        update_cache: yes
+
+    - name: Install Ansible packages
+      dnf:
+        name: ansible
+        state: present
+        update_cache: yes

@@ -1,0 +1,10 @@
+---
+
+- name: Manage site configuration
+  hosts: localhost
+  connection: local
+  gather_facts: no
+
+- import_playbook: docker/docker.yml
+- import_playbook: ansible/ansible.yml
+- import_playbook: awx/awx.yml

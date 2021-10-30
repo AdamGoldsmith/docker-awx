@@ -1,0 +1,20 @@
+---
+
+awx_deps:
+  - git
+  - gcc
+  - gcc-c++
+  - nodejs
+  - gettext
+  - device-mapper-persistent-data
+  - lvm2
+  - bzip2
+  - python3-pip
+  - make
+awx_git_repo: https://github.com/ansible/awx.git
+awx_git_version: 19.3.0
+awx_git_dest: ~/awx
+awx_inventory_data:
+  pg_password: pg_password
+  broadcast_websocket_secret: web_secret
+  secret_key: secret_key
