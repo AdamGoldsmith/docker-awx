@@ -4,11 +4,7 @@ docker_edition: ce
 docker_version: ""
 
 docker_pip_packages:
-  # Needed for Ansible docker_swarm module
-  # https://docs.ansible.com/ansible/latest/collections/community/general/docker_swarm_module.html#requirements
-  # TODO: docker 5+ needs re-testing now...
-  # docker 5.0.0 broke docker modules
-  - docker<5
+  - docker
   - docker-compose
 
 docker_repo_data:

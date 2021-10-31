@@ -1,6 +1,4 @@
 ---
 
-# TODO: Check if python interpreter is necessary?
-ansible_python_interpreter: auto_legacy
 ansible_user: ansible
 verbosity_level: 0
