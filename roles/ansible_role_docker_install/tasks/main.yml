@@ -1,23 +1,16 @@
 ---
 
-# TODO: Should separate centos7/8 and convert yum to dnf
-
 - name: Remove out-dated docker software
-  yum:
+  dnf:
     name: "{{ old_docker_packages }}"
     state: absent
-
-- name: Install yum utils
-  yum:
-    name: yum-utils
-    state: present
 
 - name: Add Docker repo GPG key
   rpm_key:
     key: "{{ docker_repo_data['gpg_key'] }}"
     state: present
 
-- name: Add Docker yum repository
+- name: Add Docker yum/dnf repository
   get_url:
     url: "{{ docker_repo_data['url'] }}"
     dest: "/etc/yum.repos.d/docker-{{ docker_edition }}.repo"
@@ -26,18 +19,13 @@
     mode: "0644"
 
 - name: Install docker packages
-  yum:
+  dnf:
     name: "{{ docker_packages }}"
     state: present
   notify: restart_docker
 
-- name: Enable EPEL repo
-  yum:
-    name: epel-release
-    state: present
-
 - name: Install python3
-  yum:
+  dnf:
     name: python3
     state: present
 
