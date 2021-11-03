@@ -58,26 +58,41 @@
         target: docker-compose
         params:
           COMPOSE_UP_OPTS: -d
+      register: start_awx
+      changed_when: ('Starting tools_' in start_awx['stderr'] | default(''))
 
-    - name: Wait for AWX services to start
-      vars:
-        pattern: 'INFO success: awx-rsyslogd entered RUNNING state'
-      command:
-        cmd: docker logs tools_awx_1
-      changed_when: no
-      register: start_awx_logs
+    - name: Wait for AWX service ports
+      tags: start
+      wait_for:
+        port: "{{ item }}"
+      loop: "{{ awx_service_ports }}"
+
+    - name: Check AWX UI availability
+      tags: ui
+      uri:
+        url: "{{ awx_ui_http_url }}"
+        return_content: yes
+      register: awx_ui_out
+      until: awx_ui_out['status'] == 200
       retries: 20
-      delay: 30
-      until: start_awx_logs['stdout'] is regex(pattern)
+      delay: 10
 
     - name: Create AWX UI
+      tags: ui
+      vars:
+        # Note: yaml syntax keeps a space after last word on line 1 "<script"
+        pattern: '<div id="app" class="app"></div><script
+          src="/static/js/runtime-main\..*\.js"></script>'
       community.docker.docker_container_exec:
         container: tools_awx_1
         command: make clean-ui ui-devel
+      # Only create UI when needed
+      when: not awx_ui_out['content'] | regex_search(pattern)
 
-    - name: Create AWX admin user
+    # TODO: Investigate if this can be done automatically
+    - name: Remind to create AWX admin user
       tags: admin
       debug:
         msg:
-          Now manually create an AWX admin account by running
-          'docker exec -ti tools_awx_1 awx-manage createsuperuser'
+          If not already done so, manually create an AWX admin account by
+          running 'docker exec -ti tools_awx_1 awx-manage createsuperuser'
