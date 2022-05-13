@@ -1,3 +1,7 @@
+# NOTICE
+
+This README is taken from another one of my repos and is therefore incorrect - needs big overhaul when I find time!
+
 # AWX on Docker deployment using Ansible & Vagrant
 
 Collection of playbooks and roles to prepare and deploy hosts to run AWX in a docker-compose development/test environment. A playbook is supplied to create a Vagrantfile from the Ansible inventory for creating an infrastructure using the VirtualBox hypervisor.

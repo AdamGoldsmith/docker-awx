@@ -1,0 +1,4 @@
+---
+
+vagrant_ram: 4096
+vagrant_disk: 20480

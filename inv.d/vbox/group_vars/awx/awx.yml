@@ -1,0 +1,31 @@
+---
+
+awx_deps:
+  - git
+  - gcc
+  - gcc-c++
+  - nodejs
+  - gettext
+  - device-mapper-persistent-data
+  - lvm2
+  - bzip2
+  - python3-pip
+  - make
+awx_git_repo: https://github.com/ansible/awx.git
+awx_git_version: 19.3.0
+awx_git_dest: ~/awx
+awx_inventory_data:
+  pg_password: pg_password
+  broadcast_websocket_secret: web_secret
+  secret_key: secret_key
+awx_service_ports:
+  - 2222
+  - 6899
+  - 8013
+  - 8043
+  - 8080
+  - 8888
+awx_ui_http_port: 8013
+awx_ui_https_port: 8043
+awx_ui_http_url: "http://localhost:{{ awx_ui_http_port }}"
+awx_ui_https_url: "https://localhost:{{ awx_ui_https_port }}"
