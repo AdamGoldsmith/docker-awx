@@ -80,9 +80,7 @@
     - name: Create AWX UI
       tags: ui
       vars:
-        # Note: yaml syntax keeps a space after last word on line 1 "<script"
-        pattern: '<div id="app" class="app"></div><script
-          src="/static/js/runtime-main\..*\.js"></script>'
+        pattern: '/style><div id="app" class="app"></div></body></html>'
       community.docker.docker_container_exec:
         container: tools_awx_1
         command: make clean-ui ui-devel
