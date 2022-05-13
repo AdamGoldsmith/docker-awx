@@ -1,0 +1,8 @@
+---
+
+- name: Manage system configuration
+  hosts: localhost
+  connection: local
+  gather_facts: no
+
+- import_playbook: system_prepare.yml

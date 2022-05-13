@@ -1,0 +1,45 @@
+---
+
+- name: Prepare system
+  hosts: awx
+  gather_facts: yes
+  become: yes
+  tags:
+    - system_prepare
+    - system
+
+  tasks:
+
+    # Fix for CentOS8 EoL
+    # https://www.centos.org/centos-linux-eol/
+    # https://forketyfork.medium.com/centos-8-no-urls-in-mirrorlist-error-3f87c3466faa
+    - name: CentOS8 EoL block
+      block:
+
+        - name: Find all yum repo file
+          ansible.builtin.find:
+            paths: /etc/yum.repos.d
+            patterns: "CentOS-*"
+          register: find_repos
+
+        - name:
+          ansible.builtin.debug:
+            var: find_repos['files'] | map(attribute='path')
+
+        - name: Comment out mirrorlist in repo files
+          ansible.builtin.replace:
+            path: "{{ item }}"
+            regexp: "#?mirrorlist="
+            replace: "#mirrorlist="
+          loop: "{{ find_repos['files'] | map(attribute='path') }}"
+
+        - name: Update baseurl in repo files
+          ansible.builtin.replace:
+            path: "{{ item }}"
+            regexp: "#baseurl=http://mirror.centos.org"
+            replace: "baseurl=http://vault.centos.org"
+          loop: "{{ find_repos['files'] | map(attribute='path') }}"
+
+      when:
+        - ansible_distribution == 'CentOS'
+        - ansible_distribution_major_version == '8'
