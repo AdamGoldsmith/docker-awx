@@ -21,6 +21,10 @@ From root directory of repo:
 1. `ansible-playbook playbooks/site.yml`
 1. Point browser at https://10.20.88.11:8043 to access [AWX](https://github.com/ansible/awx)
 
+To stop the services cleanly from the Ansible controller:
+
+1. ansible awx -a "docker-compose -f ~/awx/tools/docker-compose/_sources/docker-compose.yml stop"
+
 ## Overview of tasks
 
 When run with default options, the following tasks will be applied in this order. Each main task can be run by supplying `--tags` - see [here](#running-the-deployment) for details.
