@@ -16,3 +16,8 @@
         cmd: "docker-compose -f ~/awx/tools/docker-compose/_sources/docker-compose.yml stop"
       register: stop_awx
       changed_when: stop_awx['stderr'] | regex_search(pattern)
+
+    - name: Debug stop AWX components
+      ansible.builtin.debug:
+        var: stop_awx
+        verbosity: "{{ verbosity_level | default(1) }}"
