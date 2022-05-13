@@ -22,10 +22,6 @@
             patterns: "CentOS-*"
           register: find_repos
 
-        - name:
-          ansible.builtin.debug:
-            var: find_repos['files'] | map(attribute='path')
-
         - name: Comment out mirrorlist in repo files
           ansible.builtin.replace:
             path: "{{ item }}"
