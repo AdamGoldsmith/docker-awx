@@ -1,4 +1,5 @@
 ---
 
 vagrant_ram: 4096
+# Size is in MB
 vagrant_disk: 20480

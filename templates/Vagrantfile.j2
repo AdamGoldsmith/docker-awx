@@ -42,7 +42,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       node.vm.provider "virtualbox" do |vb|
         file_to_disk = machine[:hostname] + ".data.vdi"
           unless File.exist?(file_to_disk)
-            # 10 GB disk file
             vb.customize ['createhd', '--filename', file_to_disk, '--size', machine[:disk]]
           end
           vb.customize ['storageattach', :id, '--storagectl', 'IDE', '--port', 1, '--device', 0, '--type', 'hdd', '--medium', file_to_disk]
@@ -51,7 +50,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       end
       {% elif vagrant_provider | default('virtualbox') == 'libvirt' %}
       node.vm.provider "libvirt" do |lv|
+        lv.storage :file, :size => machine[:disk]/1024
         lv.memory = machine[:ram]
+        lv.default_prefix=""
       end
       {% endif %}
       node.vm.provision "file", source: SSH_PUB_KEY, destination: "~/.ssh/authorized_keys"

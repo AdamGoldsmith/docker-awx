@@ -21,7 +21,7 @@ sudo_groups:
 vg_data:
   - name: datavg
     disks:
-      - /dev/sdb
+      - /dev/vdb
     lvs:
       - name: docker
         size: "{{ vagrant_disk | default(5120) | int - 512 }}"
