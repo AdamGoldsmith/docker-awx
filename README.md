@@ -4,17 +4,20 @@ This README is taken from another one of my repos and is therefore incorrect - n
 
 # AWX on Docker deployment using Ansible & Vagrant
 
-Collection of playbooks and roles to prepare and deploy hosts to run AWX in a docker-compose development/test environment. A playbook is supplied to create a Vagrantfile from the Ansible inventory for creating an infrastructure using the VirtualBox hypervisor.
+Collection of playbooks and roles to prepare and deploy hosts to run AWX in a docker-compose development/test environment. A playbook is supplied to create a Vagrantfile from the Ansible inventory for creating an infrastructure using either the VirtualBox or libvirt hypervisor.
 
 ## Requirements
 
 * __community.docker__ collection (install with `ansible-galaxy collection install community.docker`)
+* __vagrant__ required for deploying a VM to host Docker for running AWX container services via docker-compose
+* __VirtualBox__ required for deploying Vbox VM
+* __libvirt__ required for deploying libvirt VM
 
 ## TL;DR
 
 From root directory of repo:
 
-1. `./scripts/ansible_venv.sh && source ~/venvs/ansible_ds/bin/activate` (__Optional__ step that creates & sources an ansible-enabled python virtual environment [__Requires python3__])
+1. Depending on your flavour of hypervisor (defaults to VirtualBox), edit `ansible.cfg` and update `inventory = ./inv.d/vbox` line (choices are `vbox`, `libvirt`)
 1. `ansible-playbook playbooks/vagrant/prepare_vagrant.yml -e "vagrant_script_check=no"`
 1. `cd vagrant; vagrant up; cd ..`
 1. `./scripts/prepare_ansible_targets.sh`
@@ -23,12 +26,13 @@ From root directory of repo:
 
 To stop the services cleanly from the Ansible controller:
 
-1. ansible awx -a "docker-compose -f ~/awx/tools/docker-compose/_sources/docker-compose.yml stop"
+1. `ansible-playbook playbooks/site.yml --tags awx_stop`
 
 ## Overview of tasks
 
 When run with default options, the following tasks will be applied in this order. Each main task can be run by supplying `--tags` - see [here](#running-the-deployment) for details.
 
+1. Fixing references to unavailable repos for CentOS 8 hosts (see https://www.centos.org/centos-linux-eol/)
 1. Preparing the hosts for Docker installation (Managed by the roles `ansible_role_user_prepare` & `ansible_role_dir_prepare`)
     1. Creating groups & users
     1. Configuring sudo access
@@ -49,7 +53,13 @@ When run with default options, the following tasks will be applied in this order
     1. Start the AWX services
     1. Create the AWX UI
 
-## Supported platforms
+## Supported hypervisor host platofrms
+
+| Platform   | Version |
+|------------|---------|
+| Linux Mint | 20.3    |
+
+## Supported hypervisor guest platforms
 
 | Platform | Version |
 |----------|---------|
@@ -57,22 +67,23 @@ When run with default options, the following tasks will be applied in this order
 
 ## Requirements
 
-* Ansible 2.9+ (tested with 2.9.8 & 2.10.0)
+* Ansible 2.9+ (tested with 2.9.8, 2.10.0 & 2.12.1)
 * Python's docker module (pip - `docker`)
-* Vagrant (__*optional*__) (tested with 2.2.6)
-* Python3 (__*optional*__) (for creating a virtual env using supplied utility script)
+* Vagrant (__*optional*__) (tested with 2.2.6 & 2.2.19)
+* Python3 (__*optional*__) for creating a virtual env using supplied utility script (tested with 3.8.10)
+* libvirt vagrant plugin (vagrant plugin install vagrant-libvirt)
 
 ## Inventory directories
 
-The inventory lives under the main `inv.d` directory.
+There are two inventories that live under the main `inv.d` directory - `vbox` & `libvirt`. The default inventory is `vbox` as configued in `ansible.cfg` in the repo root directory (`inventory = ./inv.d/vbox`)
 
-The following example shows the supplied inventory in `inv.d/inventory`
+The following example shows the supplied inventory in `inv.d/vbox/inventory`
 
 ```ini
 localhost ansible_host=127.0.0.1 ansible_connection=local
 
 [awx]
-awx-1 ansible_host=10.20.88.11
+awx-1 ansible_host=192.168.56.11
 ```
 
 ## Group & Host vars
@@ -81,7 +92,7 @@ In addition to the group & host variables required for each role (see their asso
 
 `inv.d/group_vars/awx/awx.yml`
 ```yaml
-awx_git_version: 19.3.0
+awx_git_version: 20.0.0
 awx_git_dest: ~/awx
 awx_inventory_data:
   pg_password: pg_password
@@ -91,22 +102,12 @@ awx_inventory_data:
 `inv.d/ds/group_vars/all/vars.yml`
 ```yaml
 ansible_user: ansible                       # Ansible user on target host
-verbosity_level: 0                          # Verbosity level when to display debug output (0 = always, 1 = -v, 2 = -vv, etc)
+verbosity_level: 1                          # Verbosity level when to display debug output (0 = always, 1 = -v, 2 = -vv, etc)
 ```
-
-## Optional use of Ansible in Python3 virtual environment
-
-This repo supplies a utility script for creating an Ansible virtual environment with the necessary pip package dependencies installed. This is a convenient way to run Ansible in a dedicated environment without installing it directly onto the host operating system. Run the following from the repo root directory to create & activate the Ansible venv.
-
-```
-./scripts/ansible_venv.sh && source ~/venvs/ansible_ds/bin/activate
-```
-
-__Note:__ To deactivate the venv, run `deactivate` from any directory
 
 ## Optional use of Vagrant
 
-This repo supplies an Ansible playbook that locally creates a Vagrantfile and target preparation script using the contents of the `ds` inventory. These can be used to provision and prepare a complete [VirtualBox](https://www.virtualbox.org) test infrastructure using [Vagrant](https://www.vagrantup.com) ready for the Docker swarm deployment. Although it is designed to work out of the box by design, please ensure that the following vagrant variables are configured correctly.
+This repo supplies an Ansible playbook that locally creates a Vagrantfile and target preparation script using the contents of the host inventories. These can be used to provision and prepare a complete [VirtualBox](https://www.virtualbox.org) or [libvirt](https://libvirt.org/) test infrastructure using [Vagrant](https://www.vagrantup.com) ready for the Docker swarm deployment. Although it is designed to work out of the box by design, please ensure that the following vagrant variables are configured correctly.
 
 `inv.d/host_vars/localhost.yml`
 ```yaml
@@ -123,7 +124,7 @@ vagrant_ansible_user_pubkey_file: ~/.ssh/id_rsa.pub       # Path to publc SSH ke
 
 1. Running the following Ansible playbook will
     1. Create the `vagrant` & `scripts` directories
-    1. Create the `Vagrantfile`
+    1. Create the `Vagrantfile` for the selected hypervisor
     1. Create the `prepare_ansible_targets.sh` script
     1. Copy the SSH public key into the `vagrant` directory
 
@@ -133,7 +134,7 @@ ansible-playbook playbooks/vagrant/prepare_vagrant.yml
 
 __Note:__ *To override the default enabled script check mode, run with: `-e "vagrant_script_check=no"`*
 
-2. Running the following command will bring the entire infrastructure online
+2. Running the following command will bring the necessary infrastructure online
 
 ```
 cd vagrant; vagrant up; cd ..
@@ -171,6 +172,12 @@ This can easily be achieved when using vagrant:
 ```
 cd vagrant; vagrant destroy --force; vagrant up; cd ..
 ```
+
+## Known Issues
+
+1. Inactive libvirt networks
+
+    It was noticed that when using libvirt provider for vagrant, the network was inactive at system bootup. There is an option to start it at system startup in the "Virtual Networks" tab of the "Connection Details" window in "Virtual Machine Manager"
 
 ## Author Information
 
