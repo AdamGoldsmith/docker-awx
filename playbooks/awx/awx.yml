@@ -6,3 +6,4 @@
   gather_facts: no
 
 - import_playbook: awx_install.yml
+- import_playbook: awx_stop.yml
