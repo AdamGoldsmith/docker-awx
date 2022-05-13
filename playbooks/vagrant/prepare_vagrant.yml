@@ -13,7 +13,7 @@
 
     - name: Create directories
       file:
-        path: "{{ inventory_dir }}/../{{ item }}"
+        path: "{{ inventory_dir }}/../../{{ item }}"
         state: directory
         mode: "0775"
       loop:
@@ -24,23 +24,25 @@
     - name: Create Vagrantfile
       # noqa 404
       template:
-        src: "{{ inventory_dir }}/../templates/Vagrantfile.j2"
-        dest: "{{ inventory_dir }}/../vagrant/Vagrantfile"
+        src: "{{ inventory_dir }}/../../templates/Vagrantfile.j2"
+        dest: "{{ inventory_dir }}/../../vagrant/Vagrantfile"
         mode: "0644"
+        lstrip_blocks: yes
 
     # Use the inventory config & vars to create a script to prepare an
     # ansible setup on the vagrant targets
     - name: Create vagrant script
       # noqa 404
       template:
-        src: "{{ inventory_dir }}/../templates/prepare_ansible_targets.sh.j2"
-        dest: "{{ inventory_dir }}/../scripts/prepare_ansible_targets.sh"
+        src: "{{ inventory_dir }}/../../templates/prepare_ansible_targets.sh.j2"
+        dest: "{{ inventory_dir }}/../../scripts/prepare_ansible_targets.sh"
         mode: "0754"
+        lstrip_blocks: yes
       when: inventory_file is defined
 
     - name: Put ansible user public key into vagrant directory
       copy:
         src: "{{ vagrant_ansible_user_pubkey_file | expanduser }}"
-        dest: "{{ inventory_dir }}/../vagrant/"
+        dest: "{{ inventory_dir }}/../../vagrant/"
         mode: "0644"
       when: vagrant_ansible_user_pubkey_file is defined

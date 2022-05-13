@@ -26,15 +26,19 @@ servers=[
 ]
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  config.vm.provider "{{ vagrant_provider | default('virtualbox') }}"
   servers.each do |machine|
+    {% if vagrant_provider | default('virtualbox') == 'virtualbox' %}
     if Vagrant.has_plugin?("vagrant-vbguest")
       config.vbguest.auto_update = INSTALL_GUEST_ADDITIONS
     end
+    {% endif %}
     config.vm.define machine[:hostname] do |node|
       node.vm.box = BOX_NAME
       node.vm.hostname = machine[:hostname]
       node.vm.network "private_network", ip: machine[:ip]
       node.vm.network :forwarded_port, guest: 22, host: machine[:ssh_port], id: 'ssh'
+      {% if vagrant_provider | default('virtualbox') == 'virtualbox' %}
       node.vm.provider "virtualbox" do |vb|
         file_to_disk = machine[:hostname] + ".data.vdi"
           unless File.exist?(file_to_disk)
@@ -45,6 +49,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         vb.customize ["modifyvm", :id, "--memory", machine[:ram]]
         vb.name = machine[:hostname]
       end
+      {% elif vagrant_provider | default('virtualbox') == 'libvirt' %}
+      node.vm.provider "libvirt" do |lv|
+        lv.memory = machine[:ram]
+      end
+      {% endif %}
       node.vm.provision "file", source: SSH_PUB_KEY, destination: "~/.ssh/authorized_keys"
     end
   end

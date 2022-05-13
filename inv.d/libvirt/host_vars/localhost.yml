@@ -1,6 +1,7 @@
 ---
 
 ansible_python_interpreter: "{{ ansible_playbook_python }}"
+vagrant_provider: libvirt
 vagrant_box_version: "centos/8"
 vagrant_guest_additions: False
 vagrant_domain: ""
