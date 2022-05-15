@@ -4,10 +4,11 @@ Collection of playbooks and roles to prepare and deploy hosts to run AWX in a do
 
 ## Requirements
 
-* __community.docker__ collection (install with `ansible-galaxy collection install community.docker`)
-* __vagrant__ required for deploying a VM to host Docker for running AWX container services via docker-compose
-* __VirtualBox__ required for deploying Vbox VM
-* __libvirt__ required for deploying libvirt VM
+* __[Ansible](https://www.ansible.com/)__ to run the playbooks
+* __[community.docker](https://docs.ansible.com/ansible/latest/collections/community/docker/index.html)__ collection (install with `ansible-galaxy collection install community.docker`)
+* __[vagrant](https://www.vagrantup.com)__ required for deploying a VM to host Docker for running AWX container services via docker-compose
+* __[VirtualBox](https://www.virtualbox.org)__ required for deploying Vbox VM
+* __[libvirt](https://libvirt.org)__ required for deploying libvirt VM
 
 ## TL;DR
 
@@ -18,7 +19,11 @@ From root directory of repo:
 1. `cd vagrant; vagrant up; cd ..`
 1. `./scripts/prepare_ansible_targets.sh`
 1. `ansible-playbook playbooks/site.yml`
-1. Point browser at https://10.20.88.11:8043 to access [AWX](https://github.com/ansible/awx)
+1. Point browser at https://192.168.56.11:8043 to access [AWX](https://github.com/ansible/awx)
+
+To start the services from the Ansible controller (after starting the awx host):
+
+1. `ansible-playbook playbooks/site.yml --tags start`
 
 To stop the services cleanly from the Ansible controller:
 
@@ -28,6 +33,10 @@ To stop the services cleanly from the Ansible controller:
 
 When run with default options, the following tasks will be applied in this order. Each main task can be run by supplying `--tags` - see [here](#running-the-deployment) for details.
 
+1. Install libvirt packages - REQUIRES REBOOT (Optional - will not run unless local tags specified)
+    1. Installs Vagrant locally
+    1. Installs the necessary libvirt packages locally
+    1. Add the LOGGED-IN USER to libvirt & libvirt-qemu groups
 1. Fixing references to unavailable repos for CentOS 8 hosts (see https://www.centos.org/centos-linux-eol/)
 1. Preparing the hosts for Docker installation (Managed by the roles `ansible_role_user_prepare` & `ansible_role_dir_prepare`)
     1. Creating groups & users
@@ -49,11 +58,12 @@ When run with default options, the following tasks will be applied in this order
     1. Start the AWX services
     1. Create the AWX UI
 
-## Supported hypervisor host platofrms
+## Supported hypervisor host platforms
 
 | Platform   | Version |
 |------------|---------|
 | Linux Mint | 20.3    |
+| Ubuntu     | 22.04   |
 
 ## Supported hypervisor guest platforms
 
@@ -171,9 +181,32 @@ cd vagrant; vagrant destroy --force; vagrant up; cd ..
 
 ## Known Issues
 
+1. Running VirtualBox & libvirt simultaneously
+
+    It is not possible to run both VirtualBox and libvirt at the same time as only one hypervisor can make use of the virtualisation extensions at a time
+
 1. Inactive libvirt networks
 
     It was noticed that when using libvirt provider for vagrant, the network was inactive at system bootup. There is an option to start it at system startup in the "Virtual Networks" tab of the "Connection Details" window in "Virtual Machine Manager"
+
+1. `vagrant up` fails with libvirt on Ubuntu 22.04
+
+    After waiting for domain to get an IP address, domain is immediately removed with an error of "pkeys are immutable on OpenSSL 3.0". See this [bug report](https://github.com/hashicorp/vagrant/issues/12751) for further details. My fix was
+
+    ```
+    sudo gem install net-ssh --version 7.0.0.beta1
+    ```
+
+1. `sshpass` removed from EPEL 8 repository
+
+    * https://src.fedoraproject.org/rpms/sshpass/c/f185e1ffab660fbbbf866dcc833b9a918e202d09?branch=epel8)
+    * https://unix.stackexchange.com/questions/702624/rocky-8-5-alternate-repo-for-sshpass-removed-from-epel
+
+    Workaround in the code to install an older version of `sshpass` from EPEL 8.5.2022-05-10 archive
+
+## TODO
+
+1. Create SSH keys as part of the process instead of using user's own public key (use kubernetes-lxd repo process)
 
 ## Author Information
 
