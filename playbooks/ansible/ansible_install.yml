@@ -16,6 +16,12 @@
         state: present
         update_cache: yes
 
+    # sshpass has been removed from EPEL 8.5 (https://src.fedoraproject.org/rpms/sshpass/c/f185e1ffab660fbbbf866dcc833b9a918e202d09?branch=epel8)
+    - name: Install sshpass from older EPEL source
+      dnf:
+        name: 'https://dl.fedoraproject.org/pub/archive/epel/8.5.2022-05-10/Everything/x86_64/Packages/s/sshpass-1.06-9.el8.x86_64.rpm'
+        state: present
+
     - name: Install Ansible packages
       dnf:
         name: ansible
