@@ -21,6 +21,7 @@
       dnf:
         name: 'https://dl.fedoraproject.org/pub/archive/epel/8.5.2022-05-10/Everything/x86_64/Packages/s/sshpass-1.06-9.el8.x86_64.rpm'
         state: present
+        disable_gpg_check: yes
 
     - name: Install Ansible packages
       dnf:
