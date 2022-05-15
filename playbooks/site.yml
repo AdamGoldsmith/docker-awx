@@ -5,6 +5,7 @@
   connection: local
   gather_facts: no
 
+- import_playbook: local/local.yml
 - import_playbook: system/system.yml
 - import_playbook: docker/docker.yml
 - import_playbook: ansible/ansible.yml

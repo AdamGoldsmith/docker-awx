@@ -1,0 +1,8 @@
+---
+
+- name: Manage localhost configuration
+  hosts: localhost
+  connection: local
+  gather_facts: no
+
+- import_playbook: local_install.yml

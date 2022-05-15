@@ -1,0 +1,65 @@
+---
+
+- name: Install software on localhost
+  hosts: localhost
+  connection: local
+  gather_facts: yes
+  become: yes
+  tags:
+    - never
+    - local_install
+    - local
+
+  tasks:
+
+    - name: Install prerequisite software
+      vars:
+        packages:
+          - gnupg
+          - software-properties-common
+          - curl
+      ansible.builtin.apt:
+        name: "{{ packages }}"
+        update_cache: yes
+
+    - name: Add HashiCorp GPG key
+      ansible.builtin.apt_key:
+        url: https://apt.releases.hashicorp.com/gpg
+        state: present
+
+    - name: Add HashiCorp Linux repository
+      ansible.builtin.apt_repository:
+        repo: "deb [arch=amd64] https://apt.releases.hashicorp.com {{ ansible_facts['lsb']['codename'] }} main"
+        state: present
+
+    - name: Install Vagrant
+      ansible.builtin.apt:
+        name: vagrant
+        update_cache: yes
+
+    - name: Install libvirt packages
+      vars:
+        packages:
+          - qemu-kvm
+          - libvirt-clients
+          - libvirt-daemon-system
+          - bridge-utils
+          - virt-manager
+      ansible.builtin.apt:
+        name: "{{ packages }}"
+        update_cache: yes
+        cache_valid_time: 3600
+      register: install_libvirt
+
+    - name: Add local user to libvirt groups
+      user:
+        name: "{{ lookup('env', 'USER') }}"
+        append: yes
+        groups:
+          - libvirt
+          - libvirt-qemu
+
+    - name: Reboot message
+      debug:
+        msg: "You should reboot the system now to pick up libvirt changes"
+      when: install_libvirt is changed
