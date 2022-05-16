@@ -12,10 +12,10 @@
     - name: Stop AWX components
       vars:
         pattern: 'Stopping\s+.*\s+\.\.\.\s+'
-      ansible.builtin.command:
+      command:
         cmd: "docker-compose -f ~/awx/tools/docker-compose/_sources/docker-compose.yml stop"
       register: stop_awx
-      changed_when: stop_awx['stderr'] | regex_search(pattern)
+      changed_when: stop_awx['stderr'] | default("") | regex_search(pattern)
 
     - name: Debug stop AWX components
       ansible.builtin.debug:
